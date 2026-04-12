@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Water Prototype</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// プレイヤー
+let player = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  vx: 0,
+  vy: 0,
+  size: 6
+};
+
+// 入力
+let keys = {};
+window.addEventListener("keydown", e => keys[e.key] = true);
+window.addEventListener("keyup", e => keys[e.key] = false);
+
+// 異変オブジェクト（3つ）
+let objects = [
+  { x: 200, y: 200, type: "dark", active: false },
+  { x: 500, y: 300, type: "flow", active: false },
+  { x: 800, y: 400, type: "shadow", active: false }
+];
+
+// 水の揺らぎ
+let time = 0;
+
+// 更新
+function update() {
+  time += 0.01;
+
+  // 入力（遅延っぽくするため弱め）
+  if (keys["ArrowUp"]) player.vy -= 0.05;
+  if (keys["ArrowDown"]) player.vy += 0.05;
+  if (keys["ArrowLeft"]) player.vx -= 0.05;
+  if (keys["ArrowRight"]) player.vx += 0.05;
+
+  // 慣性（水中感）
+  player.vx *= 0.98;
+  player.vy *= 0.98;
+
+  player.x += player.vx;
+  player.y += player.vy;
+
+  // 画面外制限
+  player.x = Math.max(0, Math.min(canvas.width, player.x));
+  player.y = Math.max(0, Math.min(canvas.height, player.y));
+
+  // オブジェクトとの距離判定
+  objects.forEach(obj => {
+    let dx = player.x - obj.x;
+    let dy = player.y - obj.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < 40) {
+      obj.active = true;
+    }
+  });
+}
+
+// 描画
+function draw() {
+  // 背景（水の揺らぎ）
+  ctx.fillStyle = "rgba(0, 0, 20, 0.3)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // 水中の歪みっぽいエフェクト
+  ctx.save();
+  ctx.translate(Math.sin(time) * 5, Math.cos(time * 0.8) * 5);
+
+  // オブジェクト描画
+  objects.forEach(obj => {
+    if (obj.type === "dark") {
+      ctx.fillStyle = obj.active ? "rgba(50,50,50,0.8)" : "rgba(20,20,20,0.5)";
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, obj.active ? 30 : 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (obj.type === "flow") {
+      ctx.strokeStyle = obj.active ? "rgba(100,100,255,0.8)" : "rgba(100,100,255,0.3)";
+      ctx.beginPath();
+      ctx.moveTo(obj.x - 30, obj.y);
+      ctx.lineTo(obj.x + 30, obj.y);
+      ctx.stroke();
+    }
+
+    if (obj.type === "shadow") {
+      ctx.fillStyle = obj.active ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.arc(obj.x, obj.y, obj.active ? 50 : 30, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // プレイヤー
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ループ
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>
