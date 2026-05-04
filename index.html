@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Water Prototype</title>
+  <title>Water Relax Game</title>
   <style>
     body {
       margin: 0;
@@ -38,21 +38,27 @@ let keys = {};
 window.addEventListener("keydown", e => keys[e.key] = true);
 window.addEventListener("keyup", e => keys[e.key] = false);
 
-// 異変オブジェクト（3つ）
-let objects = [
-  { x: 200, y: 200, type: "dark", active: false },
-  { x: 500, y: 300, type: "flow", active: false },
-  { x: 800, y: 400, type: "shadow", active: false }
-];
+// 粒（ストレス）
+let particles = [];
+for (let i = 0; i < 40; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: 3 + Math.random() * 3
+  });
+}
 
-// 水の揺らぎ
+// リップル
+let ripples = [];
+
+// 時間（揺らぎ用）
 let time = 0;
 
 // 更新
 function update() {
   time += 0.01;
 
-  // 入力（遅延っぽくするため弱め）
+  // 入力（弱め＋遅延感）
   if (keys["ArrowUp"]) player.vy -= 0.05;
   if (keys["ArrowDown"]) player.vy += 0.05;
   if (keys["ArrowLeft"]) player.vx -= 0.05;
@@ -65,55 +71,63 @@ function update() {
   player.x += player.vx;
   player.y += player.vy;
 
-  // 画面外制限
+  // 画面内制限
   player.x = Math.max(0, Math.min(canvas.width, player.x));
   player.y = Math.max(0, Math.min(canvas.height, player.y));
 
-  // オブジェクトとの距離判定
-  objects.forEach(obj => {
-    let dx = player.x - obj.x;
-    let dy = player.y - obj.y;
+  // 粒との接触
+  particles = particles.filter(p => {
+    let dx = player.x - p.x;
+    let dy = player.y - p.y;
     let dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < 40) {
-      obj.active = true;
+    if (dist < 20) {
+      // リップル発生
+      ripples.push({
+        x: p.x,
+        y: p.y,
+        radius: 0,
+        alpha: 0.5
+      });
+      return false;
     }
+    return true;
   });
+
+  // リップル更新
+  ripples.forEach(r => {
+    r.radius += 1.5;
+    r.alpha *= 0.97;
+  });
+
+  ripples = ripples.filter(r => r.alpha > 0.01);
 }
 
 // 描画
 function draw() {
-  // 背景（水の揺らぎ）
-  ctx.fillStyle = "rgba(0, 0, 20, 0.3)";
+  // 背景（残像で水っぽく）
+  ctx.fillStyle = "rgba(0, 0, 20, 0.25)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // 水中の歪みっぽいエフェクト
   ctx.save();
-  ctx.translate(Math.sin(time) * 5, Math.cos(time * 0.8) * 5);
 
-  // オブジェクト描画
-  objects.forEach(obj => {
-    if (obj.type === "dark") {
-      ctx.fillStyle = obj.active ? "rgba(50,50,50,0.8)" : "rgba(20,20,20,0.5)";
-      ctx.beginPath();
-      ctx.arc(obj.x, obj.y, obj.active ? 30 : 20, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  // 水の揺らぎ
+  ctx.translate(Math.sin(time) * 3, Math.cos(time * 0.8) * 3);
 
-    if (obj.type === "flow") {
-      ctx.strokeStyle = obj.active ? "rgba(100,100,255,0.8)" : "rgba(100,100,255,0.3)";
-      ctx.beginPath();
-      ctx.moveTo(obj.x - 30, obj.y);
-      ctx.lineTo(obj.x + 30, obj.y);
-      ctx.stroke();
-    }
+  // 粒
+  particles.forEach(p => {
+    ctx.fillStyle = "rgba(200,200,255,0.6)";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
 
-    if (obj.type === "shadow") {
-      ctx.fillStyle = obj.active ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.arc(obj.x, obj.y, obj.active ? 50 : 30, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  // リップル
+  ripples.forEach(r => {
+    ctx.strokeStyle = "rgba(200,200,255," + r.alpha + ")";
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+    ctx.stroke();
   });
 
   // プレイヤー
