@@ -58,8 +58,8 @@ let time = 0;
 function update() {
   time += 0.01;
 
-   player.size = 6 + Math.sin(time * 2) * 1.5;
-
+  player.size = 6 + Math.sin(time * 2) * 3;
+  
   // 入力（弱め＋遅延感）
   if (keys["ArrowUp"]) player.vy -= 0.05;
   if (keys["ArrowDown"]) player.vy += 0.05;
