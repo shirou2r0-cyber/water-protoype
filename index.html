@@ -61,14 +61,14 @@ function update() {
   player.size = 6 + Math.sin(time * 2) * 3;
   
   // 入力（弱め＋遅延感）
-  if (keys["ArrowUp"]) player.vy -= 0.05;
-  if (keys["ArrowDown"]) player.vy += 0.05;
-  if (keys["ArrowLeft"]) player.vx -= 0.05;
-  if (keys["ArrowRight"]) player.vx += 0.05;
+  if (keys["ArrowUp"]) player.vy -= 0.02;
+  if (keys["ArrowDown"]) player.vy += 0.02;
+  if (keys["ArrowLeft"]) player.vx -= 0.02;
+  if (keys["ArrowRight"]) player.vx += 0.02;
 
   // 慣性（水中感）
-  player.vx *= 0.98;
-  player.vy *= 0.98;
+  player.vx *= 0.995;
+  player.vy *= 0.995;
 
   player.x += player.vx;
   player.y += player.vy;
