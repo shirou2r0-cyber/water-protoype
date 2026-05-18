@@ -12,10 +12,24 @@
     canvas {
       display: block;
     }
+    #replayButton {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 12px 24px;
+      font-size: 18px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      display: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 <canvas id="game"></canvas>
+<button id="replayButton">Replay</button>
 
 <script>
 const canvas = document.getElementById("game");
@@ -58,7 +72,7 @@ let time = 0;
 function update() {
   time += 0.01;
 
-  player.size = 6 + Math.sin(time * 2) * 3;
+  player.size = 10 + Math.sin(time * 2) * 1;
   
   // 入力（弱め＋遅延感）
   if (keys["ArrowUp"]) player.vy -= 0.02;
@@ -110,11 +124,19 @@ function draw() {
   // 背景（残像で水っぽく）
   ctx.fillStyle = "rgba(0, 0, 20, 0.25)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   ctx.save();
+    if (cleared) {
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
   // 水の揺らぎ
-  ctx.translate(Math.sin(time) * 10, Math.cos(time * 0.8) * 10);
+  let calm = particles.length / 20;
+
+ctx.translate(
+  Math.sin(time) * 4 * calm,
+  Math.cos(time * 0.8) * 4 * calm
+);
 
   // 粒
   particles.forEach(p => {
@@ -141,14 +163,43 @@ function draw() {
   ctx.restore();
 }
 
+let cleared = false;
+
 // ループ
 function loop() {
   update();
+
+  if (particles.length === 0) {
+    cleared = true;
+  }
+
   draw();
+
+  if (cleared) {
+    document.getElementById("replayButton").style.display = "block";
+  }
+
   requestAnimationFrame(loop);
 }
+  
+document.getElementById("replayButton").onclick = () => {
 
-loop();
+  particles = [];
+  
+  for (let i = 0; i < 20; i++) {
+      particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: 5 + Math.random() * 4
+    });
+  }
+
+  ripples = [];
+  cleared = false;
+
+  document.getElementById("replayButton").style.display = "none";
+};
+
 </script>
 </body>
 </html>
