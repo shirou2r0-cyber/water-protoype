@@ -131,13 +131,8 @@ function update() {
 // 描画
 function draw() {
   // 背景（残像で水っぽく）
-  ctx.fillStyle = "rgba(255,255,255," + clearFade + ")";  
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-    if (cleared) {
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
+ ctx.fillStyle = "rgba(0, 0, 20, 0.25)";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // 水の揺らぎ
   let calm = particles.length / 20;
@@ -189,9 +184,6 @@ function loop() {
   if (cleared) {
     document.getElementById("replayButton").style.display = "block";
   }
-
-  if (cleared) {
-  clearFade += 0.002;
 
   requestAnimationFrame(loop);
 }
